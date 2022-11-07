@@ -3,6 +3,8 @@
 QTH="$(dirname "${BASH_SOURCE[0]}")"
 cd "$QTH"
 
+aux28="n"
+
 function Generar {
     if [ -f "$HOME/.ssh/id_rsa" ]
     then
@@ -18,7 +20,7 @@ function Generar {
             case "$Clave"
             in
             "1")
-                sshpass -p 1 ssh-copy-id $IP
+                aux28="s"
                 BUCL1="s"
             ;;
             "2")
@@ -37,14 +39,14 @@ function Generar {
                     "1")
                         mkdir "$HOME/pr-hlc"
                         ssh-keygen -t rsa -N "" -f $Ruta/id_rsa
-                        sshpass -p 1 ssh-copy-id -i $Ruta/id_rsa.pub $IP
+                        aux27="s"
                         BUCL2="s"
                     ;;
                     "2")
                         echo -e "Escribe la ruta absoluta que exista sin errores, no sera comprobada"
                         read -e -p "=> " Ruta
                         ssh-keygen -t rsa -N "" -f $Ruta/id_rsa
-                        sshpass -p 1 ssh-copy-id -i $Ruta/id_rsa.pub $IP
+                        aux27="s"
                         BUCL2="s"
                     ;;
                     *)
@@ -74,7 +76,7 @@ function Generar {
             "1")
                 mkdir "$HOME/pr-hlc"
                 ssh-keygen -t rsa -N "" -f $Ruta/id_rsa
-                sshpass -p 1 ssh-copy-id -i $Ruta/id_rsa.pub $IP
+                
                 BUCL2="s"
             ;;
             "2")
@@ -227,6 +229,15 @@ function Apache {
 	echo -e "-------------------------------------------------------------------\n"
     host=`virsh net-dhcp-leases default | tail +3 | grep "$NombreMaquina" | xargs | cut -d " " -f 5 | cut -d "/" -f 1`
     Connect="debian@$host"
+    if [ "$aux28" = "s" ]
+    then
+        sshpass -p 1 ssh-copy-id $Connect
+    else 
+        if [ "$aux27" = "s" ]
+        then
+            sshpass -p 1 ssh-copy-id -i $Ruta/id_rsa.pub $Connect
+        fi
+    fi
     ssh -i "$Ruta" "$Connect" -o "StrictHostKeyChecking no" "sudo apt install xfsprogs apache2 lxc lxc-templates -y && rm -f /var/www/html/index.html"
     ssh -i "$Ruta" "$Connect" "(echo o; echo n; echo p; echo -e "\n"; echo "\n"; echo "\n"; echo w) | fdisk /dev/vdb && mkfs.xfs /dev/vdb1"
     ssh -i "$Ruta" "$Connect" "sudo mount /dev/vdb1 /var/www/html"
@@ -240,7 +251,7 @@ function Apache {
 
 if [ "$#" -eq "0" ]
 then
-	CrearMaquina
+	Terminos
 else
 	clear
 	echo -e "Este script no permite ejecutarse con argumentos."
