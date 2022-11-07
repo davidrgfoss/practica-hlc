@@ -5,6 +5,8 @@ cd "$QTH"
 
 aux28="n"
 
+set -x
+
 function Generar {
     if [ -f "$HOME/.ssh/id_rsa" ]
     then
@@ -160,7 +162,7 @@ function CrearMaquina {
         clear
         echo -e "Escribe un nombre para la maquina"
         read -e -p "=> " NombreMaquina
-        comp1=`virsh list --all | tail +3 | grep "wordpress" | xargs | cut -d " " -f 2`
+        comp1=`virsh list --all | tail +3 | grep "$NombreMaquina" | xargs | cut -d " " -f 2`
         if [ "$NombreMaquina" = "$comp1" ]
         then
             echo -e "La maquina ya existe"
@@ -186,12 +188,13 @@ function CrearMaquina {
     echo -e "<network>\n<name>intra</name>\n<bridge name='virbr28'/>\n<forward/>\n<ip address='10.10.20.1' netmask='255.255.255.0'>\n\t<dhcp>\n\t\t<range start='10.10.20.2' end='10.10.20.254'/>\n\t</dhcp>\n</ip>\n</network>" > intra.xml
     virsh net-define ./intra.xml && virsh net-start intra && virsh net-autostart intra
     rm -Rf ./intra.xml
+    sleep 3
     echo -e "-------------------------------------------------------------------"
     echo -e "Crear Maquina"
 	echo -e "-------------------------------------------------------------------\n"
     virt-install \
     --virt-type kvm \
-    --name $Maquina \
+    --name "$NombreMaquina" \
     --os-variant debian11 \
     --disk path="/var/lib/libvirt/images/$NombreMaquina.qcow2" \
     --import \
@@ -199,8 +202,9 @@ function CrearMaquina {
     --memory 1024 \
     --vcpus 1 \
     --noautoconsole
-    virsh attach-disk "$NombreMaquina" /var/lib/libvirt/images/vol1 vdb --driver=qemu --type disk --subdriver raw --persistent
+    virsh attach-disk "$NombreMaquina" /var/lib/libvirt/images/vol28 vdb --driver=qemu --type disk --subdriver raw --persistent
     sudo virt-sysprep -d "$NombreMaquina" --hostname "$NombreMaquina"
+    sleep 3
     SSH
     echo -e "-------------------------------------------------------------------"
     echo -e "Crear Contenedor y añadiendo interfaz br0"
