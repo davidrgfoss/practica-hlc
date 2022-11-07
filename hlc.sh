@@ -92,8 +92,6 @@ function Generar {
     Apache
 }
 
-read -e -p "=> " maquina
-
 function SSH {
 	BUCL="n"
 	while [ "$BUCL" = "n" ]
@@ -167,11 +165,18 @@ function CrearMaquina {
             sleep 5
         else
             echo -e "Creando volumen y redimensionando"
-            virsh vol-create-as --capacity 5G --format qcow2 --pool default --backing-vol "$QTH/bullseye-base.qcow2" --name "$NombreMaquina.qcow2" --backing-vol-format qcow2
+            virsh vol-create-as --capacity 5G --format qcow2 --pool default --backing-vol "bullseye-base.qcow2" --name "$NombreMaquina.qcow2" --backing-vol-format qcow2
+            sleep 3
             sudo qemu-img create -f qcow2 "/tmp/$NombreMaquina.qcow2" 5G
+            sleep 3
             sudo virt-resize --expand /dev/vda1 "/var/lib/libvirt/images/$NombreMaquina.qcow2" "/tmp/$NombreMaquina.qcow2"
+            sleep 3
             sudo mv -f "/tmp/$NombreMaquina.qcow2" "/var/lib/libvirt/images/$NombreMaquina.qcow2"
-            virsh vol-create-as --pool default --name vol1 --capacity 1G --format raw
+            sleep 3
+            virsh vol-create-as --pool default --name vol28 --capacity 1G --format raw
+            BUCL="s"
+            sleep 10
+        fi
     done
     echo -e "-------------------------------------------------------------------"
     echo -e "Crear Red intra"
@@ -235,7 +240,7 @@ function Apache {
 
 if [ "$#" -eq "0" ]
 then
-	Inicio
+	CrearMaquina
 else
 	clear
 	echo -e "Este script no permite ejecutarse con argumentos."
